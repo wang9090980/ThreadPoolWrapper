@@ -1,0 +1,71 @@
+package com.wl.threadpool.lib.job;
+
+import com.wl.threadpool.lib.callback.Callback;
+import com.wl.threadpool.lib.config.ThreadPoolInfo;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+
+/**
+ * 抽象job类
+ */
+public abstract class AbstractJob implements Runnable, Callback {
+
+    protected String _lineSeparator = System.getProperty("line.separator");
+    
+    /** 运行状态：true表示正在运行；false表示已停止 */
+    protected volatile AtomicBoolean _run = new AtomicBoolean(true);
+    
+    /** 线程休眠时间（单位：秒） */
+    protected int _interval = 60;
+
+    @Override
+    public void init(Map<String, ThreadPoolInfo> threadPoolInfoMap) {
+
+    }
+
+    public void initJob(){
+        _run.set(true);
+    }
+
+    @Override
+    public void run() {
+        while (_run.get()) {
+            execute();
+        }
+    }
+    
+    protected abstract void execute();
+    
+    /**
+     * 休眠<code>_interval</code>指定的时间。
+     */
+    protected void sleep() {
+        try {
+            Thread.sleep(_interval * 1000);
+        } catch (InterruptedException e) {
+            // nothing
+        }
+    }
+    
+    /**
+     * @return 返回"yyyy-MM-dd HH:mm:ss"格式的当前日期时间字符串
+     */
+    protected String currentTime() {
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = Calendar.getInstance().getTime();
+        
+        return format.format(date);
+    }
+    
+    @Override
+    public void destroy() {
+        _run.set(false);
+    }
+
+}
